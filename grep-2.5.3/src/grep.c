@@ -460,6 +460,7 @@ reset (int fd, char const *file, struct stats *stats)
 		  bufoffset = 0;
 		else
 		{
+			/* TODO: check whether the nc_open have done the job: lseek */
 			bufoffset = lseek (fd, 0, SEEK_CUR);
 			if (bufoffset < 0)
 			{
@@ -594,6 +595,7 @@ fillbuf (size_t save, struct stats const *stats)
 	if (! fillsize)
 	{
 		ssize_t bytesread;
+		/* TODO: read the file into buffer */
 		while ((bytesread = read (bufdesc, readbuf, readsize)) < 0
 					&& errno == EINTR)
 		  continue;
