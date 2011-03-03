@@ -1092,9 +1092,6 @@ grep (int fd, char const *file, struct stats *stats)
 	char *lim;
 	char eol = eolbyte;
 
-	if (!reset (fd, file, stats))
-	  return 0;
-
 	if (file && directories == RECURSE_DIRECTORIES
 				&& S_ISDIR (stats->stat.st_mode))
 	{
@@ -1104,6 +1101,10 @@ grep (int fd, char const *file, struct stats *stats)
 		  error (0, errno, "%s", file);
 		return grepdir (file, stats) - 2;
 	}
+
+	if (!reset (fd, file, stats))
+	  return 0;
+
 
 	totalcc = 0;
 	lastout = 0;
