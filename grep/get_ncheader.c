@@ -13,19 +13,21 @@
 
 int get_ncheader(const char *file, int write_pipe){
 	
-	int		original_stdout;
+	int	original_stdout;
+	int status;
 
 	original_stdout = dup(STDOUT_FILENO);
 
 	dup2(write_pipe, STDOUT_FILENO);
 	close(write_pipe);
 
-	ncdump_header(file);
+	status = ncdump_header(file);
 	fflush(stdout);
+	close(STDOUT_FILENO);
 
 	dup2(original_stdout, STDOUT_FILENO);
 
-	return 0;
+	return status;
 }
 
 

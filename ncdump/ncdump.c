@@ -476,7 +476,7 @@ pr_att_valgs(
 	    break;
 #endif /* USE_NETCDF4 */
 	default:
-	    error("pr_att_vals: bad type");
+	    nc_error("pr_att_vals: bad type");
 	}
     }
 }
@@ -565,7 +565,7 @@ pr_att_valsx(
 	    (void) strlcat(attvals, iel < len-1 ? " " : "", attvalslen);
 	    break;
 	default:
-	    error("pr_att_valsx: bad type");
+	    nc_error("pr_att_valsx: bad type");
 	}
     }
 }
@@ -659,7 +659,7 @@ pr_att(
 	      data = emalloc(att.len * type_size);
 	     break;
 	  default:
-	     error("unrecognized class of user defined type: %d", class);
+	     nc_error("unrecognized class of user defined type: %d", class);
        }
 
        NC_CHECK( nc_get_att(ncid, varid, att.name, data));
@@ -724,7 +724,7 @@ pr_att(
 	   free(data);
 	   break;
        default:
-	   error("unrecognized class of user defined type: %d", class);
+	   nc_error("unrecognized class of user defined type: %d", class);
        }
     }
 #endif /* USE_NETCDF4 */
@@ -1053,7 +1053,7 @@ print_enum_type(int ncid, nc_type typeid) {
 	    break;
 #endif /* USE_NETCDF4 */
 	default:
-	    error("Bad base type for enum!");
+	    nc_error("Bad base type for enum!");
 	    break;
 	}
 	esc_mn = escaped_name(memname);
@@ -1418,7 +1418,7 @@ do_ncdump_rec(int ncid, const char *path, fspec_t* specp)
       }
       stat = nc_inq_dim(ncid, dimid, dims[d_grp].name, &dims[d_grp].size);
       if (stat == NC_EDIMSIZE && SIZEOF_SIZE_T < 8) {
-	  error("dimension \"%s\" too large for 32-bit platform, try 64-bit version", dims[d_grp].name);
+	  nc_error("dimension \"%s\" too large for 32-bit platform, try 64-bit version", dims[d_grp].name);
       } else {
 	  NC_CHECK (stat);
       }
@@ -1593,7 +1593,7 @@ do_ncdump_rec(int ncid, const char *path, fspec_t* specp)
 	 var.locid = ncid;
 	 set_tostring_func(&var, specp);
 	 if (vardata(&var, vdims, ncid, varid, specp) == -1) {
-	    error("can't output data for variable %s", var.name);
+	    nc_error("can't output data for variable %s", var.name);
 	    NC_CHECK(
 	       nc_close(ncid) );
 	    goto done;
@@ -1835,7 +1835,7 @@ set_sigdigs(const char *optarg)
     if (ptr1 && *ptr1 == ',') {
       dbl_digits = (int)strtol(ptr1+1, &ptr2, 10);
       if (ptr2 == ptr1+1 || dbl_digits < 1 || dbl_digits > 20) {
-	  error("unreasonable value for double significant digits: %d",
+	  nc_error("unreasonable value for double significant digits: %d",
 		dbl_digits);
       }
     }
@@ -1869,7 +1869,7 @@ set_precision(const char *optarg)
 	dbl_digits = (int) strtol(ptr1+1, &ptr2, 10);
 	double_precision_specified = 1;
 	if (ptr2 == ptr1+1 || dbl_digits < 1 || dbl_digits > 20) {
-	    error("unreasonable value for double significant digits: %d",
+	    nc_error("unreasonable value for double significant digits: %d",
 		  dbl_digits);
 	}
     }
@@ -1938,7 +1938,7 @@ missing_vars(int ncid, fspec_t *specp) {
     int iv;
     for (iv=0; iv < specp->nlvars; iv++) {
 	if(nc_inq_varname_count(ncid, specp->lvars[iv]) == 0) {
-	    error("%s: No such variable", specp->lvars[iv]);
+	    nc_error("%s: No such variable", specp->lvars[iv]);
 	}
     }
     return 0;
@@ -2032,7 +2032,7 @@ main(int argc, char *argv[])
 	      fspec.data_lang = LANG_F;
 	      break;
 	    default:
-	      error("invalid value for -b option: %s", optarg);
+	      nc_error("invalid value for -b option: %s", optarg);
 	  }
 	  break;
 	case 'f':		/* full comments in data section */
@@ -2045,13 +2045,13 @@ main(int argc, char *argv[])
 	      fspec.data_lang = LANG_F;
 	      break;
 	    default:
-	      error("invalid value for -f option: %s", optarg);
+	      nc_error("invalid value for -f option: %s", optarg);
 	  }
 	  break;
 	case 'l':		/* maximum line length */
 	  max_len = (int) strtol(optarg, 0, 0);
 	  if (max_len < 10) {
-	      error("unreasonably small line length specified: %d", max_len);
+	      nc_error("unreasonably small line length specified: %d", max_len);
 	  }
 	  break;
 	case 'v':		/* variable names */
@@ -2106,7 +2106,7 @@ main(int argc, char *argv[])
     {		
 	char *path = strdup(argv[i]);
 	if(!path)
-	    error("out of memory copying argument %s", argv[i]);
+	    nc_error("out of memory copying argument %s", argv[i]);
         if (!nameopt) 
 	    fspec.name = name_path(path);
 	if (argc > 0) {

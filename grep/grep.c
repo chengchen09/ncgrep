@@ -1115,12 +1115,13 @@ grep (int fd, char const *file, struct stats *stats)
 		return grepdir (file, stats) - 2;
 	}
 
-	/* TODO: read the nc to the fd pipe */
-	/* add by chen */
+	/* 
+	 * read the nc to the fd pipe
+	 * add by chen
+	 */
 	if (close (fd) != 0)
 	  error (0, errno, "%s", file);
-	/* read the ncdump -h file to pipe */	
-	/* TODO: fork a process to write into pipe */
+	
 	int pipebuf[2];
 	if (pipe(pipebuf) != 0)
 	{
@@ -1130,7 +1131,8 @@ grep (int fd, char const *file, struct stats *stats)
 
 	/* fork a process to write netcdf header to pipe[1] */
 	int pid;
-	if ((pid = fork()) > 0){
+	if ((pid = fork()) == 0){
+		close(pipebuf[0]);
 		get_ncheader(file, pipebuf[1]);
 		exit(0);
 	}
@@ -1139,6 +1141,7 @@ grep (int fd, char const *file, struct stats *stats)
 		exit(1);
 	}
 
+	close(pipebuf[1]);
 	fd = pipebuf[0];
 
 

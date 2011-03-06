@@ -1964,7 +1964,6 @@ void adapt_url_for_cache(char **pathp) {
 
 int
 ncdump_header(const char *file)
-//ncdump_header(int argc, char *argv[])
 {
 	extern int optind;
 	extern int opterr;
@@ -2036,7 +2035,8 @@ ncdump_header(const char *file)
 #endif /*USE_DAP*/
 			nc_status = nc_open(path, NC_NOWRITE, &ncid);
 			if (nc_status != NC_NOERR) {
-				nc_error("%s: %s", path, nc_strerror(nc_status));
+				return nc_status;
+				//nc_error("%s: %s", path, nc_strerror(nc_status));
 			}
 			if (kind_out) {
 				do_nckind(ncid, path);
