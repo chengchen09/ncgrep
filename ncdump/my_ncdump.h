@@ -7,6 +7,7 @@
 #ifndef MY_NCDUMP_H
 #define MY_NCDUMP_H
 
-int ncdump_header(int argc, char *argv[]);
+int ncdump_header(const char *file);
+//int ncdump_header(int argc, char *argv[]);
 
 #endif

@@ -6,3 +6,5 @@ fgrep
 egrep
 *.swp
 .deps/
+ncgrep
+int.nc

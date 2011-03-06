@@ -49,7 +49,8 @@
 #include "closeout.h"
 
 /* add by chen */
-#include "netcdf.h"
+#include <unistd.h>
+#include "get_ncheader.h"
 
 #undef MAX
 #define MAX(A,B) ((A) > (B) ? (A) : (B))
@@ -506,6 +507,14 @@ fillbuf (size_t save, struct stats const *stats)
 		readbuf = buflim;
 		bufbeg = buflim - save;
 	}
+	/* changed by chen */
+	else
+	{
+		readbuf = ALIGN_TO(buffer + 1 + save, pagesize);
+		bufbeg = readbuf - save;
+	}
+	/* original */
+#if 0
 	else
 	{
 		size_t minsize = save + pagesize;
@@ -549,6 +558,7 @@ fillbuf (size_t save, struct stats const *stats)
 			buffer = newbuf;
 		}
 	}
+#endif
 
 	readsize = buffer + bufalloc - readbuf;
 	readsize -= readsize % pagesize;
@@ -1106,6 +1116,30 @@ grep (int fd, char const *file, struct stats *stats)
 	}
 
 	/* TODO: read the nc to the fd pipe */
+	/* add by chen */
+	if (close (fd) != 0)
+	  error (0, errno, "%s", file);
+	/* read the ncdump -h file to pipe */	
+	/* TODO: fork a process to write into pipe */
+	int pipebuf[2];
+	if (pipe(pipebuf) != 0)
+	{
+		printf("pipe create error!\n");
+		exit(1);
+	}
+
+	/* fork a process to write netcdf header to pipe[1] */
+	int pid;
+	if ((pid = fork()) > 0){
+		get_ncheader(file, pipebuf[1]);
+		exit(0);
+	}
+	else if (pid < 0){
+		printf("fork() error\n");
+		exit(1);
+	}
+
+	fd = pipebuf[0];
 
 
 	if (!reset (fd, file, stats))
@@ -1247,17 +1281,17 @@ grepfile (char const *file, struct stats *stats)
 			return 1;
 
 		/* TODO: change open to edf_open */
-		/* original
+		/* original */
 		while ((desc = open (file, O_RDONLY)) < 0 && errno == EINTR)
-		  continue;*/
-		/* changed by chen */
+		  continue;
+		/* changed by chen 
 		int nc_ret_val;
-		while ((nc_ret_val = ncopen (file, NC_NOWRITE, &desc)) != NC_NOERR && errno == EINTR)
-			continue;
-		/* original
-		if (desc < 0)*/
-		/* changed by chen */
-		if(nc_ret_val != NC_NOERR)
+		while ((nc_ret_val = nc_open (file, NC_NOWRITE, &desc)) != NC_NOERR && errno == EINTR)
+			continue;*/
+		/* original */
+		if (desc < 0)
+		/* changed by chen 
+		if(nc_ret_val != NC_NOERR)*/
 		{
 			int e = errno;
 
@@ -1427,102 +1461,102 @@ usage (int status)
 	{
 		printf (_("Usage: %s [OPTION]... PATTERN [FILE]...\n"), program_name);
 		printf (_("\
-						Search for PATTERN in each FILE or standard input.\n"));
+Search for PATTERN in each FILE or standard input.\n"));
 #if defined(EGREP_PROGRAM)
 		printf (_("\
-						PATTERN is an extended regular expression (ERE).\n"));
+PATTERN is an extended regular expression (ERE).\n"));
 #elif defined(FGREP_PROGRAM)
 		printf (_("\
-						PATTERN is a set of newline-separated fixed strings.\n"));
+PATTERN is a set of newline-separated fixed strings.\n"));
 #else
 		printf (_("\
-						PATTERN is, by default, a basic regular expression (BRE).\n"));
+PATTERN is, by default, a basic regular expression (BRE).\n"));
 #endif /* ?GREP_PROGRAM */
 		printf (_("\
-						Example: %s -i 'hello world' menu.h main.c\n\
-						\n\
-						Regexp selection and interpretation:\n"), program_name);
+Example: %s -i 'hello world' menu.h main.c\n\
+\n\
+Regexp selection and interpretation:\n"), program_name);
 #ifdef GREP_PROGRAM
 		printf (_("\
-						-E, --extended-regexp     PATTERN is an extended regular expression (ERE)\n\
-						-F, --fixed-strings       PATTERN is a set of newline-separated fixed strings\n\
-						-G, --basic-regexp        PATTERN is a basic regular expression (BRE)\n\
-						-P, --perl-regexp         PATTERN is a Perl regular expression\n"));
+  -E, --extended-regexp     PATTERN is an extended regular expression (ERE)\n\
+  -F, --fixed-strings       PATTERN is a set of newline-separated fixed strings\n\
+  -G, --basic-regexp        PATTERN is a basic regular expression (BRE)\n\
+  -P, --perl-regexp         PATTERN is a Perl regular expression\n"));
 		/* -X is undocumented on purpose. */
 #endif /* GREP_PROGRAM */
 		printf (_("\
-						-e, --regexp=PATTERN      use PATTERN for matching\n\
-						-f, --file=FILE           obtain PATTERN from FILE\n\
-						-i, --ignore-case         ignore case distinctions\n\
-						-w, --word-regexp         force PATTERN to match only whole words\n\
-						-x, --line-regexp         force PATTERN to match only whole lines\n\
-						-z, --null-data           a data line ends in 0 byte, not newline\n"));
+  -e, --regexp=PATTERN      use PATTERN for matching\n\
+  -f, --file=FILE           obtain PATTERN from FILE\n\
+  -i, --ignore-case         ignore case distinctions\n\
+  -w, --word-regexp         force PATTERN to match only whole words\n\
+  -x, --line-regexp         force PATTERN to match only whole lines\n\
+  -z, --null-data           a data line ends in 0 byte, not newline\n"));
 		printf (_("\
-						\n\
-						Miscellaneous:\n\
-						-s, --no-messages         suppress error messages\n\
-						-v, --invert-match        select non-matching lines\n\
-						-V, --version             print version information and exit\n\
-						--help                display this help and exit\n\
-						--mmap                use memory-mapped input if possible\n"));
+\n\
+Miscellaneous:\n\
+  -s, --no-messages         suppress error messages\n\
+  -v, --invert-match        select non-matching lines\n\
+  -V, --version             print version information and exit\n\
+      --help                display this help and exit\n\
+      --mmap                use memory-mapped input if possible\n"));
 		printf (_("\
-						\n\
-						Output control:\n\
-						-m, --max-count=NUM       stop after NUM matches\n\
-						-b, --byte-offset         print the byte offset with output lines\n\
-						-n, --line-number         print line number with output lines\n\
-						--line-buffered       flush output on every line\n\
-						-H, --with-filename       print the filename for each match\n\
-						-h, --no-filename         suppress the prefixing filename on output\n\
-						--label=LABEL         print LABEL as filename for standard input\n\
-						-o, --only-matching       show only the part of a line matching PATTERN\n\
-						-q, --quiet, --silent     suppress all normal output\n\
-						--binary-files=TYPE   assume that binary files are TYPE;\n\
-						TYPE is `binary', `text', or `without-match'\n\
-						-a, --text                equivalent to --binary-files=text\n\
-						-I                        equivalent to --binary-files=without-match\n\
-						-d, --directories=ACTION  how to handle directories;\n\
-						ACTION is `read', `recurse', or `skip'\n\
-						-D, --devices=ACTION      how to handle devices, FIFOs and sockets;\n\
-						ACTION is `read' or `skip'\n\
-						-R, -r, --recursive       equivalent to --directories=recurse\n\
-						--include=FILE_PATTERN  search only files that match FILE_PATTERN\n\
-						--exclude=FILE_PATTERN  skip files and directories matching FILE_PATTERN\n\
-						--exclude-from=FILE   skip files matching any file pattern from FILE\n\
-						--exclude-dir=PATTERN directories that match PATTERN will be skipped.\n\
-						-L, --files-without-match print only names of FILEs containing no match\n\
-						-l, --files-with-matches  print only names of FILEs containing matches\n\
-						-c, --count               print only a count of matching lines per FILE\n\
-						-T, --initial-tab         make tabs line up (if needed)\n\
-						-Z, --null                print 0 byte after FILE name\n"));
+\n\
+Output control:\n\
+  -m, --max-count=NUM       stop after NUM matches\n\
+  -b, --byte-offset         print the byte offset with output lines\n\
+  -n, --line-number         print line number with output lines\n\
+      --line-buffered       flush output on every line\n\
+  -H, --with-filename       print the filename for each match\n\
+  -h, --no-filename         suppress the prefixing filename on output\n\
+      --label=LABEL         print LABEL as filename for standard input\n\
+  -o, --only-matching       show only the part of a line matching PATTERN\n\
+  -q, --quiet, --silent     suppress all normal output\n\
+      --binary-files=TYPE   assume that binary files are TYPE;\n\
+	                        TYPE is `binary', `text', or `without-match'\n\
+  -a, --text                equivalent to --binary-files=text\n\
+  -I                        equivalent to --binary-files=without-match\n\
+  -d, --directories=ACTION  how to handle directories;\n\
+                            ACTION is `read', `recurse', or `skip'\n\
+  -D, --devices=ACTION      how to handle devices, FIFOs and sockets;\n\
+                            ACTION is `read' or `skip'\n\
+  -R, -r, --recursive       equivalent to --directories=recurse\n\
+      --include=FILE_PATTERN  search only files that match FILE_PATTERN\n\
+      --exclude=FILE_PATTERN  skip files and directories matching FILE_PATTERN\n\
+      --exclude-from=FILE   skip files matching any file pattern from FILE\n\
+      --exclude-dir=PATTERN directories that match PATTERN will be skipped.\n\
+  -L, --files-without-match print only names of FILEs containing no match\n\
+  -l, --files-with-matches  print only names of FILEs containing matches\n\
+  -c, --count               print only a count of matching lines per FILE\n\
+  -T, --initial-tab         make tabs line up (if needed)\n\
+  -Z, --null                print 0 byte after FILE name\n"));
 		printf (_("\
-						\n\
-						Context control:\n\
-						-B, --before-context=NUM  print NUM lines of leading context\n\
-						-A, --after-context=NUM   print NUM lines of trailing context\n\
-						-C, --context=NUM         print NUM lines of output context\n\
-						-NUM                      same as --context=NUM\n\
-						--color[=WHEN],\n\
-						--colour[=WHEN]       use markers to highlight the matching strings;\n\
-						WHEN is `always', `never', or `auto'\n\
-						-U, --binary              do not strip CR characters at EOL (MSDOS)\n\
-						-u, --unix-byte-offsets   report offsets as if CRs were not there (MSDOS)\n\
-						\n"));
+\n\
+Context control:\n\
+  -B, --before-context=NUM  print NUM lines of leading context\n\
+  -A, --after-context=NUM   print NUM lines of trailing context\n\
+  -C, --context=NUM         print NUM lines of output context\n\
+  -NUM                      same as --context=NUM\n\
+      --color[=WHEN],\n\
+	  --colour[=WHEN]       use markers to highlight the matching strings;\n\
+	                        WHEN is `always', `never', or `auto'\n\
+  -U, --binary              do not strip CR characters at EOL (MSDOS)\n\
+  -u, --unix-byte-offsets   report offsets as if CRs were not there (MSDOS)\n\
+\n"));
 #if defined(EGREP_PROGRAM)
 		printf (_("\
-						Invocation as `egrep' is deprecated; use `grep -E' instead.\n"));
+Invocation as `egrep' is deprecated; use `grep -E' instead.\n"));
 #elif defined(FGREP_PROGRAM)
 		printf (_("\
-						Invocation as `fgrep' is deprecated; use `grep -F' instead.\n"));
+Invocation as `fgrep' is deprecated; use `grep -F' instead.\n"));
 #else
 		printf (_("\
-						`egrep' means `grep -E'.  `fgrep' means `grep -F'.\n\
-						Direct invocation as either `egrep' or `fgrep' is deprecated.\n"));
+`egrep' means `grep -E'.  `fgrep' means `grep -F'.\n\
+Direct invocation as either `egrep' or `fgrep' is deprecated.\n"));
 #endif /* ?GREP_PROGRAM */
 		printf (_("\
-						With no FILE, or when FILE is -, read standard input.  If less than two FILEs\n\
-						are given, assume -h.  Exit status is 0 if any line was selected, 1 otherwise;\n\
-						if any error occurs and -q was not given, the exit status is 2.\n"));
+With no FILE, or when FILE is -, read standard input.  If less than two FILEs\n\
+are given, assume -h.  Exit status is 0 if any line was selected, 1 otherwise;\n\
+if any error occurs and -q was not given, the exit status is 2.\n"));
 		printf (_("\nReport bugs to <%s>.\n"), PACKAGE_BUGREPORT);
 	}
 	exit (status);

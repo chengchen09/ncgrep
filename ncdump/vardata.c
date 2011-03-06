@@ -478,7 +478,7 @@ vardata(
 	  cor[vrank-1] = corsav;
 	if (ir < nrows-1)
 	  if (!upcorner(vdims,vp->ndims,cor,add))
-	    error("vardata: odometer overflowed!");
+	    nc_error("vardata: odometer overflowed!");
 	set_indent(2);
     }
 
@@ -687,7 +687,7 @@ vardatax(
 	  cor[vrank-1] = corsav;
 	if (ir < nrows-1)
 	  if (!upcorner(vdims,vp->ndims,cor,add))
-	    error("vardata: odometer overflowed!");
+	    nc_error("vardata: odometer overflowed!");
 	set_indent(2);
     }
     printf(" </values>\n");

@@ -113,7 +113,7 @@ char double_att_fmt[] = "%#.NNg";
  * Print error message to stderr and exit
  */
 void
-error(const char *fmt, ...)
+nc_error(const char *fmt, ...)
 {
     va_list args ;
 
@@ -528,7 +528,7 @@ prim_type_name(nc_type type)
 	return "string";
 #endif /* USE_NETCDF4 */
       default:
-	error("prim_type_name: bad type %d", type);
+	nc_error("prim_type_name: bad type %d", type);
 	return "bogus";
     }
 }
@@ -585,7 +585,7 @@ void typeadd(nctype_t *typep) {
 nctype_t *
 get_typeinfo ( int typeid ) {
     if(typeid < 0 || typeid > number_of_types)
-	error("ncdump: %d is an invalid type id", typeid);
+	nc_error("ncdump: %d is an invalid type id", typeid);
     return nctypes[typeid];
 }
 
@@ -986,7 +986,7 @@ ncenum_typ_tostring(const nctype_t *typ, safebuf_t *sfbf, const void *valp) {
 	val = *(long long *)valp;
 	break;
     default:
-	error("bad base type for enum");
+	nc_error("bad base type for enum");
 	break;
     }
     NC_CHECK( nc_inq_enum_ident(typ->ncid, typ->tid, val, symbol));
@@ -1287,7 +1287,7 @@ double to_double(const ncvar_t *varp, const void *valp) {
 	break;
 #endif /* USE_NETCDF4 */
     default:
-	error("to_double: type not numeric primitive");
+	nc_error("to_double: type not numeric primitive");
     }
     return dd;
 }
@@ -1472,7 +1472,7 @@ set_tostring_func(ncvar_t *varp, fspec_t *specp) {
 	varp->val_tostring = (val_tostring_func) nccomp_val_tostring;
 	break;
     default:
-	error("unrecognized class of user defined type: %d", 
+	nc_error("unrecognized class of user defined type: %d", 
 	      varp->tinfo->class);
     } 
 #endif /* USE_NETCDF4 */
@@ -1733,7 +1733,7 @@ init_types(int ncid) {
 	      tinfo->typ_tostring = (typ_tostring_func) ncopaque_typ_tostring;
 	      break;
 	  default:
-	      error("bad class: %d", tinfo->class);
+	      nc_error("bad class: %d", tinfo->class);
 	      break;
 	  }
 	  
@@ -1869,7 +1869,7 @@ escaped_name(const char* cp) {
 /*    if(*cp && (isspace(*cp) | iscntrl(*cp)))*/
     if((*cp >= 0x01 && *cp <= 0x20) || (*cp == 0x7f))
     {
-	error("name begins with space or control-character: %c",*cp);
+	nc_error("name begins with space or control-character: %c",*cp);
     }
 
     ret = emalloc(4*strlen(cp) + 1); /* max if every char escaped */

@@ -149,7 +149,7 @@ prim_type_name(nc_type type)
 			return "compound";
 #endif /* USE_NETCDF4 */
 		default:
-			error("prim_type_name: bad type %d", type);
+			nc_error("prim_type_name: bad type %d", type);
 			return "bogus";
 	}
 }
@@ -199,7 +199,7 @@ kind_string(int kind)
 		case NC_FORMAT_NETCDF4_CLASSIC:
 			return "netCDF-4 classic model";
 		default:
-			error("unrecognized file format: %d");
+			nc_error("unrecognized file format: %d");
 			return "unrecognized";
 	}
 }
@@ -477,7 +477,7 @@ pr_att_valgs(
 				break;
 #endif /* USE_NETCDF4 */
 			default:
-				error("pr_att_vals: bad type");
+				nc_error("pr_att_vals: bad type");
 		}
 	}
 }
@@ -566,7 +566,7 @@ pr_att_valsx(
 				(void) strlcat(attvals, iel < len-1 ? " " : "", attvalslen);
 				break;
 			default:
-				error("pr_att_valsx: bad type");
+				nc_error("pr_att_valsx: bad type");
 		}
 	}
 }
@@ -660,7 +660,7 @@ pr_att(
 				data = emalloc(att.len * type_size);
 				break;
 			default:
-				error("unrecognized class of user defined type: %d", class);
+				nc_error("unrecognized class of user defined type: %d", class);
 		}
 
 		NC_CHECK( nc_get_att(ncid, varid, att.name, data));
@@ -725,7 +725,7 @@ pr_att(
 						  free(data);
 						  break;
 			default:
-						  error("unrecognized class of user defined type: %d", class);
+						  nc_error("unrecognized class of user defined type: %d", class);
 		}
 	}
 #endif /* USE_NETCDF4 */
@@ -850,7 +850,7 @@ pr_att_specials(
 					printf("\"native\"");
 					break;
 				default:
-					error("pr_att_specials: bad endianness: %d", endianness);
+					nc_error("pr_att_specials: bad endianness: %d", endianness);
 					break;
 			}
 			printf(" ;\n");
@@ -1054,7 +1054,7 @@ print_enum_type(int ncid, nc_type typeid) {
 				break;
 #endif /* USE_NETCDF4 */
 			default:
-				error("Bad base type for enum!");
+				nc_error("Bad base type for enum!");
 				break;
 		}
 		esc_mn = escaped_name(memname);
@@ -1144,7 +1144,7 @@ print_ud_type(int ncid, nc_type typeid) {
 			}
 			break;
 		default:
-			error("Unknown class of user-defined type!");
+			nc_error("Unknown class of user-defined type!");
 	}
 }
 #endif /* USE_NETCDF4 */
@@ -1419,7 +1419,7 @@ do_ncdump_rec(int ncid, const char *path, fspec_t* specp)
 		}
 		stat = nc_inq_dim(ncid, dimid, dims[d_grp].name, &dims[d_grp].size);
 		if (stat == NC_EDIMSIZE && SIZEOF_SIZE_T < 8) {
-			error("dimension \"%s\" too large for 32-bit platform, try 64-bit version", dims[d_grp].name);
+			nc_error("dimension \"%s\" too large for 32-bit platform, try 64-bit version", dims[d_grp].name);
 		} else {
 			NC_CHECK (stat);
 		}
@@ -1594,7 +1594,7 @@ do_ncdump_rec(int ncid, const char *path, fspec_t* specp)
 			var.locid = ncid;
 			set_tostring_func(&var, specp);
 			if (vardata(&var, vdims, ncid, varid, specp) == -1) {
-				error("can't output data for variable %s", var.name);
+				nc_error("can't output data for variable %s", var.name);
 				NC_CHECK(
 							nc_close(ncid) );
 				goto done;
@@ -1830,13 +1830,13 @@ set_sigdigs(const char *optarg)
 	  flt_digits = (int)strtol(optarg, &ptr1, 10);
 
 	if (flt_digits < 1 || flt_digits > 20) {
-		error("unreasonable value for float significant digits: %d",
+		nc_error("unreasonable value for float significant digits: %d",
 					flt_digits);
 	}
 	if (ptr1 && *ptr1 == ',') {
 		dbl_digits = (int)strtol(ptr1+1, &ptr2, 10);
 		if (ptr2 == ptr1+1 || dbl_digits < 1 || dbl_digits > 20) {
-			error("unreasonable value for double significant digits: %d",
+			nc_error("unreasonable value for double significant digits: %d",
 						dbl_digits);
 		}
 	}
@@ -1863,14 +1863,14 @@ set_precision(const char *optarg)
 	}
 
 	if (flt_digits < 1 || flt_digits > 20) {
-		error("unreasonable value for float significant digits: %d",
+		nc_error("unreasonable value for float significant digits: %d",
 					flt_digits);
 	}
 	if (ptr1 && *ptr1 == ',') {
 		dbl_digits = (int) strtol(ptr1+1, &ptr2, 10);
 		double_precision_specified = 1;
 		if (ptr2 == ptr1+1 || dbl_digits < 1 || dbl_digits > 20) {
-			error("unreasonable value for double significant digits: %d",
+			nc_error("unreasonable value for double significant digits: %d",
 						dbl_digits);
 		}
 	}
@@ -1939,7 +1939,7 @@ missing_vars(int ncid, fspec_t *specp) {
 	int iv;
 	for (iv=0; iv < specp->nlvars; iv++) {
 		if(nc_inq_varname_count(ncid, specp->lvars[iv]) == 0) {
-			error("%s: No such variable", specp->lvars[iv]);
+			nc_error("%s: No such variable", specp->lvars[iv]);
 		}
 	}
 	return 0;
@@ -1963,7 +1963,8 @@ void adapt_url_for_cache(char **pathp) {
 }
 
 int
-ncdump_header(int argc, char *argv[])
+ncdump_header(const char *file)
+//ncdump_header(int argc, char *argv[])
 {
 	extern int optind;
 	extern int opterr;
@@ -1993,127 +1994,32 @@ ncdump_header(int argc, char *argv[])
 	setlocale(LC_ALL, "C");     /* CDL may be ambiguous with other locales */
 #endif /* HAVE_LOCALE_H */
 	opterr = 1;
-	progname = argv[0];
+	//progname = argv[0];
+	progname = file;
 	set_formats(FLT_DIGITS, DBL_DIGITS); /* default for float, double data */
 
 	/* If the user called ncdump without arguments, print the usage
 	 * message and return peacefully. */
-	if (argc <= 1)
-	{
-		usage();
-#ifdef vms
-		exit(EXIT_SUCCESS);
-#else
-		return EXIT_SUCCESS;
-#endif
-	}
 
-	/* TODO: only print header */
-	//fspec.header_only = true;
-	
-	while ((c = getopt(argc, argv, "b:cd:f:hjkl:n:p:stv:xw")) != EOF)
-	  switch(c) {
-		  case 'h':		/* dump header only, no data */
-			  fspec.header_only = true;
-			  break;
-		  case 'c':		/* header, data only for coordinate dims */
-			  fspec.coord_vals = true;
-			  break;
-		  case 'n':		/*
-						 * provide different name than derived from
-						 * file name
-						 */
-			  fspec.name = optarg;
-			  nameopt = 1;
-			  break;
-		  case 'b':		/* brief comments in data section */
-			  fspec.brief_data_cmnts = true;
-			  switch (tolower(optarg[0])) {
-				  case 'c':
-					  fspec.data_lang = LANG_C;
-					  break;
-				  case 'f':
-					  fspec.data_lang = LANG_F;
-					  break;
-				  default:
-					  error("invalid value for -b option: %s", optarg);
-			  }
-			  break;
-		  case 'f':		/* full comments in data section */
-			  fspec.full_data_cmnts = true;
-			  switch (tolower(optarg[0])) {
-				  case 'c':
-					  fspec.data_lang = LANG_C;
-					  break;
-				  case 'f':
-					  fspec.data_lang = LANG_F;
-					  break;
-				  default:
-					  error("invalid value for -f option: %s", optarg);
-			  }
-			  break;
-		  case 'l':		/* maximum line length */
-			  max_len = (int) strtol(optarg, 0, 0);
-			  if (max_len < 10) {
-				  error("unreasonably small line length specified: %d", max_len);
-			  }
-			  break;
-		  case 'v':		/* variable names */
-			  /* make list of names of variables specified */
-			  make_lvars (optarg, &fspec);
-			  break;
-		  case 'd':		/* specify precision for floats (deprecated, undocumented) */
-			  set_sigdigs(optarg);
-			  break;
-		  case 'p':		/* specify precision for floats, overrides attribute specs */
-			  set_precision(optarg);
-			  break;
-		  case 'x':		/* XML output (NcML) */
-			  xml_out = true;
-			  break;
-		  case 'k':	        /* just output what kind of netCDF file */
-			  kind_out = true;
-			  break;
-		  case 't':		/* human-readable strings for time values */
-			  fspec.iso_times = true;
-			  break;
-		  case 's':	    /* output special (virtual) attributes for
-						 * netCDF-4 files and variables, including
-						 * _DeflateLevel, _Chunking, _Endianness,
-						 * _Format, _Checksum, _NoFill */
-			  fspec.special_atts = true;
-			  break;
-		  case 'w':		/* with client-side cache for DAP URLs */
-			  fspec.with_cache = true;
-			  break;
-		  case '?':
-			  usage();
-			  return 0;
-	  }
-	
+	/* only print header */
+	fspec.header_only = true;
+
 	set_max_len(max_len);
-
-	argc -= optind;
-	argv += optind;
-
-	/* If no file arguments left or more than one, print usage message. */
-	if (argc != 1)
-	{
-		usage();
-		return 0;
-	}
 
 	i = 0;
 
 	init_epsilons();
 
 	{		
-		char *path = strdup(argv[i]);
+		//char *path = strdup(argv[i]);
+		char *path = strdup(file);
 		if(!path)
-		  error("out of memory copying argument %s", argv[i]);
+		  nc_error("out of memory copying argument %s", file);
+		  //nc_error("out of memory copying argument %s", argv[i]);
 		if (!nameopt) 
 		  fspec.name = name_path(path);
-		if (argc > 0) {
+		//if (argc > 0) 
+		{
 			int ncid, nc_status;
 			/* If path is a URL, prefix with client-side directive to
 			 * make ncdump reasonably efficient */
@@ -2130,7 +2036,7 @@ ncdump_header(int argc, char *argv[])
 #endif /*USE_DAP*/
 			nc_status = nc_open(path, NC_NOWRITE, &ncid);
 			if (nc_status != NC_NOERR) {
-				error("%s: %s", path, nc_strerror(nc_status));
+				nc_error("%s: %s", path, nc_strerror(nc_status));
 			}
 			if (kind_out) {
 				do_nckind(ncid, path);

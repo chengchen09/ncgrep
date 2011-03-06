@@ -10,7 +10,7 @@
 #define NC_CHECK(status)    {\
 	    int nc_status = status;\
 	    if(nc_status != NC_NOERR)\
-	        error(nc_strerror(nc_status));\
+	        nc_error(nc_strerror(nc_status));\
 	}
 
 typedef int boolean;

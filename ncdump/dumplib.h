@@ -43,7 +43,7 @@ extern "C" {
 #endif
 
 /* Print error message to stderr and exit */
-extern void	error ( const char *fmt, ... );
+extern void	nc_error ( const char *fmt, ... );
 
 /* Check error on malloc and exit with message if out of memory */
 extern void*    emalloc ( size_t size );
