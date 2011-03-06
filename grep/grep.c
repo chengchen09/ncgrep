@@ -1540,8 +1540,8 @@ Context control:\n\
   -C, --context=NUM         print NUM lines of output context\n\
   -NUM                      same as --context=NUM\n\
       --color[=WHEN],\n\
-	  --colour[=WHEN]       use markers to highlight the matching strings;\n\
-	                        WHEN is `always', `never', or `auto'\n\
+      --colour[=WHEN]       use markers to highlight the matching strings;\n\
+                            WHEN is `always', `never', or `auto'\n\
   -U, --binary              do not strip CR characters at EOL (MSDOS)\n\
   -u, --unix-byte-offsets   report offsets as if CRs were not there (MSDOS)\n\
 \n"));
@@ -2232,13 +2232,17 @@ main (int argc, char **argv)
 
 	if (show_version)
 	{
+		/* TODO: version stuff */
+		printf("ncgrep 1.0\n");
+#if 0
 		printf ("%s\n\n", PACKAGE_STRING);
 		printf (_("\
-						Copyright (C) 1988, 1992-2002, 2004, 2005  Free Software Foundation, Inc.\n"));
+Copyright (C) 1988, 1992-2002, 2004, 2005  Free Software Foundation, Inc.\n"));
 		printf (_("\
-						This is free software; see the source for copying conditions.  There is NO\n\
-						warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n"));
+This is free software; see the source for copying conditions.  There is NO\n\
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n"));
 		printf ("\n");
+#endif
 		exit (0);
 	}
 
